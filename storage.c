@@ -10,7 +10,7 @@
   int room : room number of the destination
   int cnt : number of packages in the cell
   char passwd[] : password setting (4 characters)
-  char *contents : package context (message string)
+  char *context : package context (message string)
 */
 typedef struct {
 	int building;
@@ -22,9 +22,9 @@ typedef struct {
 } storage_t; 
 
 
-static storage_t **deliverySystem; 			//deliverySystem		deliv- 가리키는 이중 배열포 
+static storage_t **deliverySystem; 			//deliverySystem
 static int storedCnt = 0;					//number of cells occupied
-static int systemSize[2] = {0, 0};  		//row/column of the delivery system
+static int systemSize[2] = {0, 0};  		//initialize row/column of the delivery system
 static char masterPassword[PASSWD_LEN+1];	//master password
 
 
@@ -54,11 +54,21 @@ static void initStorage(int x, int y) {
 	
 }
 
-//get password input and check if it is correct for the cell (x,y)
-//int x, int y : cell for password check
-//return : 0 - password is matching, -1 - password is not matching
+
+
 static int inputPasswd(int x, int y) {
 	
+	char inputPasswd;
+	
+	printf("input a password : ");
+	scanf("%s", inputPasswd);			//get password input
+	
+	if (deliverySystem[x][y].passwd != inputPasswd)			//check if it is correct for the cell (x,y)
+	{
+		return -1;		//return : -1 - password is not matching
+	}
+	
+	return 0;			//return : 0 - password is matching
 }
 
 
@@ -81,37 +91,31 @@ int str_createSystem(char* filepath) {
 	int i,j;
 	
 	FILE *fp;
-	fp = fopen(filepath, "r");
+	fp = fopen(filepath, "r");			//open filepath in read mode
 	
-	systemSize[0] = fgetc(fp);
-	systemSize[1] = fgetc((fp+1));
+	systemSize[0] = fgetc(fp);			//get the row size of deliverySystem from the file
+	systemSize[1] = fgetc((fp+1));		//get the column size of deliverySystem from the file
 	
-	//create delivery system on the double pointer deliverySystem
 	deliverySystem = (struct storage_t**)malloc(systemSize[0]*sizeof(struct storage_t*));
 	
 	for(i=0;i<systemSize[0];i++)
 	{
-		deliverySystem[i] = (struct storage_t*)malloc(systemSize[1]*sizeof(struct storage_t));
+		deliverySystem[i] = (struct storage_t*)malloc(systemSize[1]*sizeof(storage_t));
 	}
-	
-	for(i=0;i<systemSize[0];i++)
-	{
-		for(j=0;j<systemSize[1];j++)
-		{
-			/* char* filepath : filepath and name to read config parameters 
-			(row, column, master password, past contexts of the delivery system) */
-			deliverySystem[i][j] = {i, j, building, room, passwd, context};
-		}
-	}
+
 	fclose(fp);
 	
-	//return : 0 - successfully created, -1 - failed to create the system	
-	return 0;
+	return 0;			//return : 0 - successfully created, -1 - failed to create the system(main.c)
 }
 
 //free the memory of the deliverySystem 
 void str_freeSystem(void) {
 	
+	int i;
+	
+	for(i=0;i<systemSize[0];i++)
+		free(deliverySystem[i]);
+	free(deliverySystem);
 }
 
 
